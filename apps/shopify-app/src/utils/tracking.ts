@@ -78,13 +78,22 @@ export function mapShopifyOrderToSaleEvent(
     customerExternalId = `shopify:${shopDomain}:order-${order.id}`;
   }
 
-  // Chercher le clickId dans les note_attributes (si on l'a stocké là)
+  // Chercher le clickId dans les note_attributes
+  // Priorité: _traaaction_click_id (injecté via Theme App Extension) > cursor_click_id > clickId
   let clickId: string | undefined;
-  const clickIdAttr = order.note_attributes?.find(
-    (attr) => attr.name === "cursor_click_id" || attr.name === "clickId"
+  const traaactionClickIdAttr = order.note_attributes?.find(
+    (attr) => attr.name === "_traaaction_click_id"
   );
-  if (clickIdAttr?.value) {
-    clickId = clickIdAttr.value;
+  if (traaactionClickIdAttr?.value) {
+    clickId = traaactionClickIdAttr.value;
+  } else {
+    // Fallback sur les anciens attributs pour rétrocompatibilité
+    const clickIdAttr = order.note_attributes?.find(
+      (attr) => attr.name === "cursor_click_id" || attr.name === "clickId"
+    );
+    if (clickIdAttr?.value) {
+      clickId = clickIdAttr.value;
+    }
   }
 
   const discountCodes =

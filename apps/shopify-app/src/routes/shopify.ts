@@ -17,7 +17,7 @@ if (env.SHOPIFY_API_KEY && env.SHOPIFY_API_SECRET) {
   shopify = shopifyApi({
     apiKey: env.SHOPIFY_API_KEY,
     apiSecretKey: env.SHOPIFY_API_SECRET,
-    scopes: env.SHOPIFY_SCOPES?.split(",") || ["read_orders", "write_orders"],
+    scopes: env.SHOPIFY_SCOPES?.split(",") || ["read_orders", "write_orders", "read_customers"],
     hostName: env.SHOPIFY_APP_URL?.replace(/^https?:\/\//, "").split("/")[0] || "localhost:3001",
     apiVersion: ApiVersion.January24,
     isEmbeddedApp: false,

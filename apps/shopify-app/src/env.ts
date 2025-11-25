@@ -6,7 +6,7 @@ dotenv.config({ path: "../../.env" });
 const envSchema = z.object({
   SHOPIFY_API_KEY: z.string().optional(),
   SHOPIFY_API_SECRET: z.string().optional(),
-  SHOPIFY_SCOPES: z.string().default("read_orders,read_customers").optional(),
+  SHOPIFY_SCOPES: z.string().default("read_orders,read_customers,write_orders").optional(),
   SHOPIFY_APP_URL: z.string().optional(),
   SHOPIFY_WORKSPACE_ID: z.string().optional(),
   API_URL: z.string().url().default("http://localhost:4000"),

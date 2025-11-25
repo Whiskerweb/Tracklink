@@ -1,0 +1,20 @@
+# Configuration pour Theme App Extension
+# Ce fichier est utilisé par Shopify CLI pour créer l'extension
+
+api_version = "2024-01"
+
+[[extensions]]
+type = "app_embed"
+name = "Traaaction Analytics"
+handle = "traaaction-analytics"
+
+[extensions.targeting]
+target = "online_store"
+
+[extensions.settings]
+[[extensions.settings.fields]]
+key = "enabled"
+type = "boolean"
+name = "Enable Traaaction Analytics"
+default = true
+

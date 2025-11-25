@@ -4,6 +4,7 @@ import sensible from "@fastify/sensible";
 import { env } from "./env";
 import { logger } from "./logger";
 import { registerShopifyRoutes } from "./routes/shopify";
+import { registerExtensionRoutes } from "./routes/extension";
 
 async function bootstrap() {
   const app = Fastify({
@@ -30,6 +31,7 @@ async function bootstrap() {
   await app.register(sensible);
 
   await registerShopifyRoutes(app);
+  await registerExtensionRoutes(app);
 
   // Health check
   app.get("/health", async () => {
