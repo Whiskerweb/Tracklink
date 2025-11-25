@@ -296,8 +296,14 @@
             return 'http://localhost:4100';
         }
 
-        const API_URL = () => document.getElementById('apiUrl').value;
-        const REDIRECT_URL = () => document.getElementById('redirectUrl').value;
+        const API_URL = () => {
+            const value = document.getElementById('apiUrl').value;
+            return value || defaultApiUrl();
+        };
+        const REDIRECT_URL = () => {
+            const value = document.getElementById('redirectUrl').value;
+            return value || defaultRedirectUrl();
+        };
         const WORKSPACE_ID = () => document.getElementById('workspaceId').value;
         const CLICK_ID = () => document.getElementById('clickId').value;
 
@@ -367,7 +373,15 @@
             if (description) payload.description = description;
 
             try {
-                const response = await fetch(`${API_URL()}/links`, {
+                const apiUrl = API_URL();
+                if (!apiUrl) {
+                    throw new Error('URL de l\'API non configurée');
+                }
+
+                console.log('Création de lien - API URL:', apiUrl);
+                console.log('Payload:', payload);
+
+                const response = await fetch(`${apiUrl}/links`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(payload),
@@ -387,7 +401,12 @@
                 // Recharger la liste
                 loadLinks();
             } catch (error) {
-                showAlert('createLinkAlert', `❌ Erreur: ${error.message}`, 'error');
+                let errorMessage = error.message;
+                if (error.message === 'Failed to fetch' || error.message.includes('fetch')) {
+                    errorMessage = `Impossible de contacter l'API. Vérifiez que l'URL est correcte (${API_URL()}) et que l'API est accessible.`;
+                }
+                console.error('Erreur création lien:', error);
+                showAlert('createLinkAlert', `❌ Erreur: ${errorMessage}`, 'error');
             } finally {
                 // Réactiver le bouton
                 createBtn.disabled = false;

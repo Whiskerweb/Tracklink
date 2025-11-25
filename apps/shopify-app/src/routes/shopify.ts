@@ -96,14 +96,13 @@ export async function registerShopifyRoutes(
       const { session } = callbackResponse;
       const shopDomain = session.shop;
 
-      // Récupérer le workspaceId (pour l'instant, via variable d'env ou mapping)
-      // TODO: Implémenter un système de mapping shop -> workspaceId
-      const workspaceId = process.env.SHOPIFY_WORKSPACE_ID || process.env.DEFAULT_WORKSPACE_ID;
+      // Récupérer le workspaceId depuis la config
+      const workspaceId = env.SHOPIFY_WORKSPACE_ID;
       
       if (!workspaceId) {
         logger.error({ shopDomain }, "No workspaceId configured for Shopify shop");
         return reply.code(500).send({
-          error: "No workspace configured. Set SHOPIFY_WORKSPACE_ID or DEFAULT_WORKSPACE_ID",
+          error: "No workspace configured. Set SHOPIFY_WORKSPACE_ID in environment variables",
         });
       }
 

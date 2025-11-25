@@ -8,6 +8,7 @@ export interface TrackSaleInput {
   currency: string;
   invoiceId?: string;
   clickId?: string;
+  idempotencyKey?: string;
   metadata?: Record<string, unknown>;
 }
 
@@ -64,11 +65,27 @@ export function mapShopifyOrderToSaleEvent(
   workspaceId: string,
   shopDomain: string
 ): TrackSaleInput {
-  const customerExternalId =
-    order.customer?.id?.toString() ||
-    order.customer?.email ||
-    order.email ||
-    `shopify_${order.id}`;
+  // CustomerExternalId au format: shopify:${shopDomain}:${customerId}
+  // ou fallback sur email ou order ID
+  let customerExternalId: string;
+  if (order.customer?.id) {
+    customerExternalId = `shopify:${shopDomain}:${order.customer.id}`;
+  } else if (order.customer?.email) {
+    customerExternalId = `shopify:${shopDomain}:${order.customer.email}`;
+  } else if (order.email) {
+    customerExternalId = `shopify:${shopDomain}:${order.email}`;
+  } else {
+    customerExternalId = `shopify:${shopDomain}:order-${order.id}`;
+  }
+
+  // Chercher le clickId dans les note_attributes (si on l'a stocké là)
+  let clickId: string | undefined;
+  const clickIdAttr = order.note_attributes?.find(
+    (attr) => attr.name === "cursor_click_id" || attr.name === "clickId"
+  );
+  if (clickIdAttr?.value) {
+    clickId = clickIdAttr.value;
+  }
 
   const discountCodes =
     order.discount_codes?.map((dc) => dc.code) || [];
@@ -79,6 +96,8 @@ export function mapShopifyOrderToSaleEvent(
     amount: parseFloat(order.total_price),
     currency: order.currency || "USD",
     invoiceId: order.name || order.id.toString(),
+    clickId, // Peut être undefined, l'attribution engine gérera les fallbacks
+    idempotencyKey: `shopify-order-${order.id}`,
     metadata: {
       shopDomain,
       orderName: order.name,
@@ -87,7 +106,6 @@ export function mapShopifyOrderToSaleEvent(
       discountCodes,
       source: "shopify",
     },
-    // clickId sera déterminé par l'attribution engine côté API
   };
 }
 
