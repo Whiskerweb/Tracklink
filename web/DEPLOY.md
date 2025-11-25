@@ -355,3 +355,6 @@ La configuration CORS a déjà été mise à jour dans `apps/api/src/index.ts` p
 **Date de création** : 2025-01-24  
 **Version** : 1.0
 
+
+
+

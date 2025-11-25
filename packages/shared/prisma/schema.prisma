@@ -135,6 +135,7 @@ model SaleEvent {
   metadata          Json?
   partnerId         String?
   partnerLinkId     String?
+  isRefunded        Boolean    @default(false)
   createdAt         DateTime   @default(now())
 
   workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
@@ -146,6 +147,7 @@ model SaleEvent {
   @@index([customerExternalId])
   @@index([createdAt])
   @@index([partnerId])
+  @@index([isRefunded])
 }
 
 model Customer {
@@ -158,6 +160,9 @@ model Customer {
   totalSalesCount   Int       @default(0)
   totalSalesAmount  Decimal   @default(0) @db.Decimal(18, 4)
   totalLeadsCount   Int       @default(0)
+  // Attribution tracking
+  firstSeenClickId  String?
+  lastSeenClickId   String?
   createdAt         DateTime  @default(now())
   updatedAt         DateTime  @updatedAt
 
@@ -165,6 +170,8 @@ model Customer {
 
   @@unique([workspaceId, externalId])
   @@index([externalId])
+  @@index([firstSeenClickId])
+  @@index([lastSeenClickId])
 }
 
 model Partner {
@@ -232,6 +239,7 @@ model Commission {
   eventType   String   // 'lead' | 'sale' | 'click'
   amount      Decimal  @db.Decimal(18, 4)
   currency    String   @default("USD")
+  isRefunded  Boolean  @default(false)
   createdAt   DateTime @default(now())
 
   workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
@@ -241,6 +249,7 @@ model Commission {
   @@index([workspaceId])
   @@index([createdAt])
   @@index([eventType])
+  @@index([isRefunded])
 }
 
 model PartnerEmbedToken {

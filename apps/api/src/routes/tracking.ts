@@ -5,9 +5,118 @@ import { trackLeadSchema, trackSaleSchema } from "../schemas/tracking";
 import { ensureIdempotent } from "../utils/idempotency";
 import { calculateAndCreateCommission } from "../utils/commissions";
 import { logger } from "../logger";
+import Decimal from "decimal.js";
 
 const EVENT_LEAD = "lead";
 const EVENT_SALE = "sale";
+
+/**
+ * Upsert Customer avec logique d'attribution (first/last click)
+ */
+async function upsertCustomerWithAttribution(
+  workspaceId: string,
+  customerExternalId: string,
+  clickId: string | null,
+  updateData?: {
+    email?: string;
+    name?: string;
+    country?: string;
+    incrementLeads?: boolean;
+    incrementSales?: boolean;
+    salesAmount?: Decimal;
+  }
+): Promise<void> {
+  if (!clickId) {
+    // Si pas de clickId, on fait un upsert simple sans attribution
+    await prisma.customer.upsert({
+      where: {
+        workspaceId_externalId: {
+          workspaceId,
+          externalId: customerExternalId,
+        },
+      },
+      create: {
+        workspaceId,
+        externalId: customerExternalId,
+        email: updateData?.email,
+        name: updateData?.name,
+        country: updateData?.country,
+        totalLeadsCount: updateData?.incrementLeads ? 1 : 0,
+        totalSalesCount: updateData?.incrementSales ? 1 : 0,
+        totalSalesAmount: updateData?.salesAmount ?? new Decimal(0),
+      },
+      update: {
+        ...(updateData?.email && { email: updateData.email }),
+        ...(updateData?.name && { name: updateData.name }),
+        ...(updateData?.country && { country: updateData.country }),
+        ...(updateData?.incrementLeads && {
+          totalLeadsCount: { increment: 1 },
+        }),
+        ...(updateData?.incrementSales && {
+          totalSalesCount: { increment: 1 },
+        }),
+        ...(updateData?.salesAmount && {
+          totalSalesAmount: { increment: updateData.salesAmount },
+        }),
+      },
+    });
+    return;
+  }
+
+  // Avec clickId : logique d'attribution
+  const existingCustomer = await prisma.customer.findUnique({
+    where: {
+      workspaceId_externalId: {
+        workspaceId,
+        externalId: customerExternalId,
+      },
+    },
+  });
+
+  if (!existingCustomer) {
+    // CREATE : initialiser firstSeenClickId et lastSeenClickId avec le clickId actuel
+    await prisma.customer.create({
+      data: {
+        workspaceId,
+        externalId: customerExternalId,
+        email: updateData?.email,
+        name: updateData?.name,
+        country: updateData?.country,
+        firstSeenClickId: clickId,
+        lastSeenClickId: clickId,
+        totalLeadsCount: updateData?.incrementLeads ? 1 : 0,
+        totalSalesCount: updateData?.incrementSales ? 1 : 0,
+        totalSalesAmount: updateData?.salesAmount ?? new Decimal(0),
+      },
+    });
+  } else {
+    // UPDATE : NE JAMAIS écraser firstSeenClickId, TOUJOURS mettre à jour lastSeenClickId
+    await prisma.customer.update({
+      where: {
+        workspaceId_externalId: {
+          workspaceId,
+          externalId: customerExternalId,
+        },
+      },
+      data: {
+        ...(updateData?.email && { email: updateData.email }),
+        ...(updateData?.name && { name: updateData.name }),
+        ...(updateData?.country && { country: updateData.country }),
+        firstSeenClickId: existingCustomer.firstSeenClickId ?? clickId, // Ne jamais écraser si existe
+        lastSeenClickId: clickId, // Toujours mettre à jour
+        ...(updateData?.incrementLeads && {
+          totalLeadsCount: { increment: 1 },
+        }),
+        ...(updateData?.incrementSales && {
+          totalSalesCount: { increment: 1 },
+        }),
+        ...(updateData?.salesAmount && {
+          totalSalesAmount: { increment: updateData.salesAmount },
+        }),
+      },
+    });
+  }
+}
 
 export async function registerTrackingRoutes(app: FastifyInstance): Promise<void> {
   app.post("/track/lead", async (request, reply) => {
@@ -53,6 +162,22 @@ export async function registerTrackingRoutes(app: FastifyInstance): Promise<void
             partnerId: lead.partnerId,
           },
           "Lead tracked"
+        );
+
+        // Upsert Customer avec attribution
+        await upsertCustomerWithAttribution(
+          payload.workspaceId,
+          payload.customerExternalId,
+          lead.clickId ?? null,
+          {
+            email: payload.metadata && typeof payload.metadata === "object" && "email" in payload.metadata
+              ? String(payload.metadata.email)
+              : undefined,
+            name: payload.metadata && typeof payload.metadata === "object" && "name" in payload.metadata
+              ? String(payload.metadata.name)
+              : undefined,
+            incrementLeads: true,
+          }
         );
 
         // Calculate commission if partner exists
@@ -140,6 +265,24 @@ export async function registerTrackingRoutes(app: FastifyInstance): Promise<void
             amount: payload.amount,
           },
           "Sale tracked"
+        );
+
+        // Upsert Customer avec attribution
+        const salesAmount = new Decimal(payload.amount);
+        await upsertCustomerWithAttribution(
+          payload.workspaceId,
+          payload.customerExternalId,
+          sale.clickId ?? null,
+          {
+            email: payload.metadata && typeof payload.metadata === "object" && "email" in payload.metadata
+              ? String(payload.metadata.email)
+              : undefined,
+            name: payload.metadata && typeof payload.metadata === "object" && "name" in payload.metadata
+              ? String(payload.metadata.name)
+              : undefined,
+            incrementSales: true,
+            salesAmount,
+          }
         );
 
         // Calculate commission if partner exists

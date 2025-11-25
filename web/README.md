@@ -77,3 +77,6 @@ Le dashboard utilise le cookie `cursor_click_id` (défini dans `@tracking/shared
 **Version** : 1.0  
 **Dernière mise à jour** : 2025-01-24
 
+
+
+

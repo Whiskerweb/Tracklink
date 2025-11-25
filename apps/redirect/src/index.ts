@@ -1,6 +1,7 @@
 import Fastify from "fastify";
 import cookie from "@fastify/cookie";
 import crypto from "node:crypto";
+import isbot from "isbot";
 import { CLICK_COOKIE_NAME, CLICK_COOKIE_TTL_DAYS, prisma } from "@tracking/shared";
 import { env } from "./env";
 import { logger } from "./logger";
@@ -48,19 +49,32 @@ async function bootstrap() {
       return reply.code(404).send("Link not found");
     }
 
+    // Vérifier si c'est un bot
+    const userAgent = request.headers["user-agent"] ?? "";
+    const isBot = isbot(userAgent);
+
     let clickId = request.cookies[CLICK_COOKIE_NAME];
     if (!clickId) {
       clickId = crypto.randomUUID();
-      reply.setCookie(CLICK_COOKIE_NAME, clickId, {
+      const cookieOptions: Parameters<typeof reply.setCookie>[2] = {
         path: "/",
         httpOnly: true,
         sameSite: "lax",
         secure: true,
         signed: false,
         maxAge: CLICK_COOKIE_TTL_DAYS * 24 * 60 * 60,
-      });
+      };
+      
+      // Si ROOT_DOMAIN est défini, ajouter le domaine avec point pour les sous-domaines
+      if (env.ROOT_DOMAIN) {
+        cookieOptions.domain = `.${env.ROOT_DOMAIN}`;
+      }
+      
+      reply.setCookie(CLICK_COOKIE_NAME, clickId, cookieOptions);
     }
 
+    // Si c'est un bot, ne pas enregistrer le ClickEvent mais maintenir la redirection
+    if (!isBot) {
       queueMicrotask(() => {
         void prisma.clickEvent
           .upsert({
@@ -99,6 +113,16 @@ async function bootstrap() {
             );
           });
       });
+    } else {
+      logger.info(
+        {
+          event: "bot_detected",
+          slug,
+          userAgent: userAgent.substring(0, 100), // Limiter la taille du log
+        },
+        "Bot detected, skipping click tracking"
+      );
+    }
 
     return reply.redirect(link.targetUrl, 302);
   });

@@ -6,8 +6,6 @@
   "packageManager": "pnpm@9.12.0",
   "scripts": {
     "dev": "turbo dev",
-    "dev:shopify": "pnpm --filter @tracking/shopify-app dev",
-    "dev:all": "pnpm --filter @tracking/api dev & pnpm --filter @tracking/redirect dev & pnpm --filter @tracking/shopify-app dev",
     "build": "turbo build",
     "lint": "turbo lint",
     "format": "prettier --write .",

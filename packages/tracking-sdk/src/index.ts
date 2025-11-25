@@ -8,6 +8,7 @@ interface TrackingInitOptions {
   apiBaseUrl: string;
   workspaceId: string;
   cookieName?: string;
+  rootDomain?: string; // Ex: "traaaction.com" pour production
   queryParamKeys?: string[];
   debug?: boolean;
   attributionModel?: AttributionModel;
@@ -325,7 +326,14 @@ function persistClickId(clickId: string): void {
     return;
   }
   const cookieName = currentOptions.cookieName ?? CLICK_COOKIE_NAME;
-  document.cookie = `${cookieName}=${clickId}; path=/; max-age=${60 * 60 * 24 * 90}; samesite=lax`;
+  let cookieString = `${cookieName}=${clickId}; path=/; max-age=${60 * 60 * 24 * 90}; samesite=lax`;
+  
+  // Si ROOT_DOMAIN est défini, ajouter le domaine avec point pour les sous-domaines
+  if (currentOptions.rootDomain) {
+    cookieString += `; domain=.${currentOptions.rootDomain}`;
+  }
+  
+  document.cookie = cookieString;
 }
 
 function getStoredClickId(): string | null {

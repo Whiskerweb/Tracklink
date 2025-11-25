@@ -243,3 +243,6 @@ ORDER BY se."createdAt" DESC;
 **Date de création** : 2025-01-24  
 **Version** : 1.0
 
+
+
+

@@ -113,3 +113,6 @@ ORDER BY se."createdAt" DESC;
 
 **Guide complet** : Voir `GUIDE_SHOPIFY_SETUP.md`
 
+
+
+

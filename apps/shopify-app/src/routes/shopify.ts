@@ -201,6 +201,154 @@ export async function registerShopifyRoutes(
     }
   });
 
+  // Webhook: refunds/create
+  app.post("/shopify/webhooks/refunds/create", {
+    config: {
+      rawBody: true,
+    },
+  }, async (request, reply) => {
+    const signature = request.headers["x-shopify-hmac-sha256"] as string;
+    const shopDomain = request.headers["x-shopify-shop-domain"] as string;
+
+    if (!signature) {
+      logger.warn("Missing webhook signature for refunds/create");
+      return reply.code(401).send({ error: "Missing signature" });
+    }
+
+    const rawBody = (request as any).rawBody || JSON.stringify(request.body);
+    if (!validateWebhookSignature(rawBody, signature)) {
+      logger.warn({ shopDomain }, "Invalid webhook signature for refunds/create");
+      return reply.code(401).send({ error: "Invalid signature" });
+    }
+
+    try {
+      // Récupérer le shop et workspaceId
+      const shop = await prisma.shopifyShop.findUnique({
+        where: { shopDomain },
+      });
+
+      if (!shop || shop.uninstalledAt) {
+        logger.warn({ shopDomain }, "Shop not found or uninstalled for refund");
+        return reply.code(404).send({ error: "Shop not found" });
+      }
+
+      // Structure du webhook refunds/create de Shopify
+      // Le payload contient: order_id, refund, etc.
+      const refundPayload = request.body as {
+        order_id: number | string;
+        order_name?: string;
+        refund?: {
+          id: number | string;
+          amount: string;
+          currency?: string;
+        };
+      };
+
+      const orderId = String(refundPayload.order_id);
+      const orderName = refundPayload.order_name || `#${orderId}`;
+
+      // Trouver le SaleEvent correspondant via invoiceId (order_name ou order_id)
+      // On cherche d'abord par invoiceId, puis dans metadata si nécessaire
+      let saleEvent = await prisma.saleEvent.findFirst({
+        where: {
+          workspaceId: shop.workspaceId,
+          OR: [
+            { invoiceId: orderName },
+            { invoiceId: orderId },
+          ],
+        },
+        include: {
+          partner: true,
+        },
+      });
+
+      // Si pas trouvé, chercher dans metadata (orderId stocké dans metadata.orderId)
+      if (!saleEvent) {
+        const allSales = await prisma.saleEvent.findMany({
+          where: {
+            workspaceId: shop.workspaceId,
+            metadata: {
+              not: null,
+            },
+          },
+          include: {
+            partner: true,
+          },
+        });
+
+        // Filtrer manuellement car Prisma ne supporte pas bien les requêtes JSON complexes
+        saleEvent = allSales.find((sale) => {
+          if (!sale.metadata || typeof sale.metadata !== "object") return false;
+          const metadata = sale.metadata as Record<string, unknown>;
+          return metadata.orderId === orderId || metadata.orderId === Number(orderId);
+        }) || null;
+      }
+
+      if (!saleEvent) {
+        logger.warn(
+          {
+            shopDomain,
+            orderId,
+            orderName,
+            workspaceId: shop.workspaceId,
+          },
+          "SaleEvent not found for refund"
+        );
+        // On retourne 200 pour éviter que Shopify réessaie
+        return reply.code(200).send({
+          success: true,
+          message: "Refund processed (sale not found, may have been created outside tracking)",
+        });
+      }
+
+      // Marquer le SaleEvent comme remboursé
+      await prisma.saleEvent.update({
+        where: { id: saleEvent.id },
+        data: { isRefunded: true },
+      });
+
+      // Marquer les commissions associées comme remboursées
+      if (saleEvent.partnerId) {
+        await prisma.commission.updateMany({
+          where: {
+            workspaceId: shop.workspaceId,
+            partnerId: saleEvent.partnerId,
+            eventId: saleEvent.id,
+            eventType: "sale",
+            isRefunded: false, // Seulement celles qui ne sont pas déjà remboursées
+          },
+          data: { isRefunded: true },
+        });
+
+        logger.info(
+          {
+            shopDomain,
+            saleEventId: saleEvent.id,
+            partnerId: saleEvent.partnerId,
+            orderName,
+          },
+          "Commissions marked as refunded"
+        );
+      }
+
+      logger.info(
+        {
+          shopDomain,
+          saleEventId: saleEvent.id,
+          orderId,
+          orderName,
+          workspaceId: shop.workspaceId,
+        },
+        "Shopify refund processed"
+      );
+
+      return reply.code(200).send({ success: true });
+    } catch (error) {
+      logger.error({ error, shopDomain }, "Failed to process Shopify refund webhook");
+      return reply.code(500).send({ error: "Failed to process webhook" });
+    }
+  });
+
   // Webhook: app/uninstalled
   app.post("/shopify/webhooks/uninstall", {
     config: {
