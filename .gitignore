@@ -1,5 +1,10 @@
-# Dependencies
-node_modules/
+# Node
+node_modules
+pnpm-lock.yaml
+package-lock.json
+yarn.lock
+
+# Python
 __pycache__/
 *.pyc
 *.pyo
@@ -10,36 +15,36 @@ venv/
 ENV/
 .venv
 
+# Build outputs
+dist
+build
+.turbo
+*.egg-info/
+*.so
+*.dylib
+
+# Env
+.env
+.env.local
+.env.*.local
+
 # IDE
-.vscode/
-.idea/
+.DS_Store
+.idea
+.vscode
 *.swp
 *.swo
 *~
 
 # OS
-.DS_Store
 Thumbs.db
 desktop.ini
-
-# Build outputs
-dist/
-build/
-*.egg-info/
-*.so
-*.dylib
 
 # Logs
 *.log
 logs/
 
-# Environment variables
-.env
-.env.local
-.env.*.local
-
 # Temporary files
 *.tmp
 *.temp
 .cache/
-

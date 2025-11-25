@@ -1,0 +1,53 @@
+{
+  "name": "tracking-monorepo",
+  "private": true,
+  "version": "0.1.0",
+  "description": "Tracking and affiliation platform monorepo",
+  "packageManager": "pnpm@9.12.0",
+  "scripts": {
+    "dev": "turbo dev",
+    "dev:shopify": "pnpm --filter @tracking/shopify-app dev",
+    "dev:all": "pnpm --filter @tracking/api dev & pnpm --filter @tracking/redirect dev & pnpm --filter @tracking/shopify-app dev",
+    "build": "turbo build",
+    "lint": "turbo lint",
+    "format": "prettier --write .",
+    "db:generate": "pnpm --filter @tracking/shared prisma:generate",
+    "db:migrate": "pnpm --filter @tracking/shared prisma:migrate",
+    "db:studio": "pnpm --filter @tracking/shared prisma:studio",
+    "db:seed": "tsx scripts/seed-test-data.ts",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:ui": "vitest --ui",
+    "test:coverage": "vitest run --coverage",
+    "test:e2e:create-link": "tsx scripts/create-link.ts",
+    "test:e2e:click": "tsx scripts/simulate-click.ts",
+    "test:e2e:lead": "tsx scripts/track-lead.ts",
+    "test:e2e:sale": "tsx scripts/track-sale.ts",
+    "domain:create": "tsx scripts/create-domain.ts",
+    "domain:setup-production": "tsx scripts/setup-production-domain.ts",
+    "test:full": "dotenv -e .env -- tsx scripts/test-full-system.ts",
+    "test:status": "dotenv -e .env -- tsx scripts/test-system-status.ts"
+  },
+  "devDependencies": {
+    "@typescript-eslint/eslint-plugin": "^8.13.0",
+    "@typescript-eslint/parser": "^8.13.0",
+    "@vitest/coverage-v8": "^4.0.13",
+    "@vitest/ui": "^4.0.13",
+    "dotenv": "^17.2.3",
+    "dotenv-cli": "^11.0.0",
+    "eslint": "^9.13.0",
+    "eslint-config-prettier": "^9.1.0",
+    "happy-dom": "^20.0.10",
+    "pino-pretty": "^13.1.2",
+    "prettier": "^3.3.3",
+    "tsx": "^4.19.1",
+    "turbo": "^2.2.3",
+    "typescript": "^5.6.3",
+    "vitest": "^4.0.13"
+  },
+  "dependencies": {
+    "@types/pg": "^8.15.6",
+    "decimal.js": "^10.6.0",
+    "pg": "^8.16.3"
+  }
+}

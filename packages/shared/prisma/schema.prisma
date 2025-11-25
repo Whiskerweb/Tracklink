@@ -1,0 +1,278 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+enum PartnerStatus {
+  PENDING
+  APPROVED
+  BANNED
+}
+
+model Workspace {
+  id        String    @id @default(cuid())
+  name      String
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  domains   Domain[]
+  links     Link[]
+  clicks    ClickEvent[]
+  leads     LeadEvent[]
+  sales     SaleEvent[]
+  customers Customer[]
+  idempotencyKeys IdempotencyKey[]
+  partners  Partner[]
+  partnerLinks PartnerLink[]
+  commissions Commission[]
+  partnerEmbedTokens PartnerEmbedToken[]
+  shopifyShops ShopifyShop[]
+}
+
+model Domain {
+  id          String    @id @default(cuid())
+  workspaceId String
+  host        String
+  verified    Boolean   @default(false)
+  createdAt   DateTime  @default(now())
+
+  workspace   Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  links       Link[]
+
+  @@unique([workspaceId, host])
+}
+
+model Link {
+  id              String      @id @default(cuid())
+  workspaceId     String
+  domainId        String
+  partnerId       String?     
+  partnerLinkId   String?
+  slug            String
+  targetUrl       String
+  trackConversion Boolean     @default(true)
+  title           String?
+  description     String?
+  tags            String[]
+  metadata        Json?
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
+
+  workspace   Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  domain      Domain    @relation(fields: [domainId], references: [id], onDelete: Cascade)
+  partner     Partner?  @relation(fields: [partnerId], references: [id])
+  // partnerLinkId is a simple foreign key, not a Prisma relation
+  clicks      ClickEvent[]
+  partnerLinks PartnerLink[] @relation("LinkPartnerLinks")
+
+  @@unique([workspaceId, domainId, slug])
+  @@index([slug])
+  @@index([createdAt])
+}
+
+model ClickEvent {
+  id            String     @id @default(cuid())
+  workspaceId   String
+  linkId        String
+  clickId       String
+  referrer      String?
+  userAgentHash String
+  ipHash        String
+  country       String?
+  device        String?
+  partnerId     String?
+  partnerLinkId String?
+  createdAt     DateTime    @default(now())
+
+  workspace   Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  link        Link      @relation(fields: [linkId], references: [id], onDelete: Cascade)
+  partner     Partner?  @relation(fields: [partnerId], references: [id])
+  partnerLink PartnerLink? @relation(fields: [partnerLinkId], references: [id])
+
+  @@unique([workspaceId, clickId])
+  @@index([linkId])
+  @@index([clickId])
+  @@index([createdAt])
+  @@index([partnerId])
+}
+
+model LeadEvent {
+  id                String     @id @default(cuid())
+  workspaceId       String
+  clickId           String?
+  customerExternalId String
+  eventName         String
+  metadata          Json?
+  partnerId         String?
+  partnerLinkId     String?
+  createdAt         DateTime   @default(now())
+
+  workspace   Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  partner     Partner?  @relation(fields: [partnerId], references: [id])
+  partnerLink PartnerLink? @relation(fields: [partnerLinkId], references: [id])
+
+  @@unique([workspaceId, eventName, customerExternalId])
+  @@index([clickId])
+  @@index([customerExternalId])
+  @@index([createdAt])
+  @@index([partnerId])
+}
+
+model SaleEvent {
+  id                String     @id @default(cuid())
+  workspaceId       String
+  clickId           String?
+  customerExternalId String
+  invoiceId         String?
+  amount            Decimal    @db.Decimal(18, 4)
+  currency          String     @default("USD")
+  paymentProcessor  String?
+  metadata          Json?
+  partnerId         String?
+  partnerLinkId     String?
+  createdAt         DateTime   @default(now())
+
+  workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  partner     Partner?  @relation(fields: [partnerId], references: [id])
+  partnerLink PartnerLink? @relation(fields: [partnerLinkId], references: [id])
+
+  @@unique([workspaceId, invoiceId])
+  @@index([clickId])
+  @@index([customerExternalId])
+  @@index([createdAt])
+  @@index([partnerId])
+}
+
+model Customer {
+  id                String    @id @default(cuid())
+  workspaceId       String
+  externalId        String
+  email             String?
+  name              String?
+  country           String?
+  totalSalesCount   Int       @default(0)
+  totalSalesAmount  Decimal   @default(0) @db.Decimal(18, 4)
+  totalLeadsCount   Int       @default(0)
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+
+  workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+
+  @@unique([workspaceId, externalId])
+  @@index([externalId])
+}
+
+model Partner {
+  id          String         @id @default(cuid())
+  workspaceId String
+  email       String
+  name        String?
+  country     String?
+  status      PartnerStatus  @default(PENDING)
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+
+  workspace   Workspace      @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  links       Link[]
+  partnerLinks PartnerLink[]
+  clickEvents ClickEvent[]
+  leadEvents  LeadEvent[]
+  saleEvents  SaleEvent[]
+  commissions Commission[]
+  embedTokens PartnerEmbedToken[]
+
+  @@unique([workspaceId, email])
+  @@index([email])
+  @@index([status])
+}
+
+model PartnerLink {
+  id          String    @id @default(cuid())
+  workspaceId String
+  partnerId   String
+  linkId      String
+  createdAt   DateTime  @default(now())
+
+  workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  partner   Partner   @relation(fields: [partnerId], references: [id], onDelete: Cascade)
+  link      Link      @relation("LinkPartnerLinks", fields: [linkId], references: [id], onDelete: Cascade)
+  clickEvents ClickEvent[]
+  leadEvents  LeadEvent[]
+  saleEvents  SaleEvent[]
+
+  @@unique([workspaceId, partnerId, linkId])
+  @@index([partnerId])
+  @@index([linkId])
+}
+
+model IdempotencyKey {
+  id          String   @id @default(cuid())
+  workspaceId String
+  key         String
+  eventType   String
+  resourceId  String
+  createdAt   DateTime @default(now())
+
+  workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+
+  @@unique([workspaceId, key, eventType])
+  @@index([key, eventType])
+}
+
+model Commission {
+  id          String   @id @default(cuid())
+  workspaceId String
+  partnerId   String
+  eventId     String
+  eventType   String   // 'lead' | 'sale' | 'click'
+  amount      Decimal  @db.Decimal(18, 4)
+  currency    String   @default("USD")
+  createdAt   DateTime @default(now())
+
+  workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  partner   Partner   @relation(fields: [partnerId], references: [id], onDelete: Cascade)
+
+  @@index([partnerId])
+  @@index([workspaceId])
+  @@index([createdAt])
+  @@index([eventType])
+}
+
+model PartnerEmbedToken {
+  id          String   @id @default(cuid())
+  workspaceId String
+  partnerId   String
+  token       String   @unique
+  expiresAt   DateTime
+  createdAt   DateTime @default(now())
+
+  workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  partner   Partner   @relation(fields: [partnerId], references: [id], onDelete: Cascade)
+
+  @@index([token])
+  @@index([partnerId])
+  @@index([expiresAt])
+}
+
+model ShopifyShop {
+  id            String    @id @default(cuid())
+  workspaceId   String
+  shopDomain    String    @unique
+  accessToken   String    // chiffré côté app si possible
+  scopes        String?   // Scopes accordés
+  installedAt   DateTime  @default(now())
+  uninstalledAt DateTime?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+
+  @@index([workspaceId])
+  @@index([shopDomain])
+}
+
