@@ -1,0 +1,516 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🎯 Dashboard Tracking - Test Manuel</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        .header {
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+        h1 {
+            color: #333;
+            margin-bottom: 10px;
+        }
+        .config {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+        }
+        .config-item {
+            display: flex;
+            flex-direction: column;
+        }
+        .config-item label {
+            font-weight: 600;
+            margin-bottom: 5px;
+            color: #555;
+            font-size: 14px;
+        }
+        .config-item input {
+            padding: 10px;
+            border: 2px solid #e0e0e0;
+            border-radius: 6px;
+            font-size: 14px;
+        }
+        .section {
+            background: white;
+            padding: 25px;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+        .section h2 {
+            color: #333;
+            margin-bottom: 20px;
+            font-size: 24px;
+        }
+        .btn {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+        .btn:hover {
+            background: #5568d3;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+        }
+        .btn:active {
+            transform: translateY(0);
+        }
+        .btn-secondary {
+            background: #48bb78;
+        }
+        .btn-secondary:hover {
+            background: #38a169;
+        }
+        .btn-danger {
+            background: #f56565;
+        }
+        .btn-danger:hover {
+            background: #e53e3e;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 600;
+            color: #555;
+        }
+        .form-group input, .form-group textarea {
+            width: 100%;
+            padding: 10px;
+            border: 2px solid #e0e0e0;
+            border-radius: 6px;
+            font-size: 14px;
+        }
+        .form-group textarea {
+            resize: vertical;
+            min-height: 80px;
+        }
+        .links-list {
+            display: grid;
+            gap: 15px;
+        }
+        .link-card {
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 20px;
+            background: #f9fafb;
+        }
+        .link-card h3 {
+            color: #333;
+            margin-bottom: 10px;
+        }
+        .link-card .link-url {
+            color: #667eea;
+            font-weight: 600;
+            word-break: break-all;
+            margin-bottom: 10px;
+        }
+        .link-card .stats {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 10px;
+            margin-top: 15px;
+        }
+        .stat-item {
+            text-align: center;
+            padding: 10px;
+            background: white;
+            border-radius: 6px;
+        }
+        .stat-item .label {
+            font-size: 12px;
+            color: #666;
+            margin-bottom: 5px;
+        }
+        .stat-item .value {
+            font-size: 20px;
+            font-weight: bold;
+            color: #333;
+        }
+        .actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+        }
+        .alert {
+            padding: 15px;
+            border-radius: 6px;
+            margin-bottom: 15px;
+        }
+        .alert-success {
+            background: #c6f6d5;
+            color: #22543d;
+            border: 1px solid #9ae6b4;
+        }
+        .alert-error {
+            background: #fed7d7;
+            color: #742a2a;
+            border: 1px solid #fc8181;
+        }
+        .alert-info {
+            background: #bee3f8;
+            color: #2c5282;
+            border: 1px solid #90cdf4;
+        }
+        .loading {
+            text-align: center;
+            padding: 20px;
+            color: #666;
+        }
+        .empty-state {
+            text-align: center;
+            padding: 40px;
+            color: #999;
+        }
+        code {
+            background: #f4f4f4;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-family: 'Courier New', monospace;
+            font-size: 13px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🎯 Dashboard Tracking - Test Manuel</h1>
+            <div class="config">
+                <div class="config-item">
+                    <label>API URL</label>
+                    <input type="text" id="apiUrl" value="http://localhost:4000" placeholder="http://localhost:4000">
+                </div>
+                <div class="config-item">
+                    <label>Redirect URL</label>
+                    <input type="text" id="redirectUrl" value="http://traaaction.com:4100" placeholder="http://traaaction.com:4100">
+                </div>
+                <div class="config-item">
+                    <label>Workspace ID</label>
+                    <input type="text" id="workspaceId" value="clx00000000000000000000000" placeholder="clx00000000000000000000000">
+                </div>
+                <div class="config-item">
+                    <label>Click ID (Cookie)</label>
+                    <input type="text" id="clickId" value="" placeholder="Auto-détecté après clic">
+                </div>
+            </div>
+            <button class="btn" onclick="refreshStats()" style="margin-top: 15px;">🔄 Statistiques actualisées</button>
+        </div>
+
+        <div class="section">
+            <h2>➕ Créer un nouveau lien de tracking</h2>
+            <div id="createLinkAlert"></div>
+            <form id="createLinkForm" onsubmit="createLink(event)">
+                <div class="form-group">
+                    <label>URL de destination</label>
+                    <input type="url" id="targetUrl" required placeholder="https://example.com">
+                </div>
+                <div class="form-group">
+                    <label>Slug (optionnel - généré automatiquement si vide)</label>
+                    <input type="text" id="slug" placeholder="mon-lien-test">
+                </div>
+                <div class="form-group">
+                    <label>Titre (optionnel)</label>
+                    <input type="text" id="linkTitle" placeholder="Mon lien de test">
+                </div>
+                <div class="form-group">
+                    <label>Description (optionnel)</label>
+                    <textarea id="linkDescription" placeholder="Description du lien"></textarea>
+                </div>
+                <button type="submit" class="btn">Créer le lien</button>
+            </form>
+        </div>
+
+        <div class="section">
+            <h2>📊 Mes liens de tracking</h2>
+            <div id="linksList">
+                <div class="loading">Chargement des liens...</div>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>🧪 Tester un événement</h2>
+            <div id="testAlert"></div>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px;">
+                <button class="btn btn-secondary" onclick="testLead()">📝 Simuler un Lead</button>
+                <button class="btn btn-secondary" onclick="testSale()">💰 Simuler une Vente</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_URL = () => document.getElementById('apiUrl').value;
+        const REDIRECT_URL = () => document.getElementById('redirectUrl').value;
+        const WORKSPACE_ID = () => document.getElementById('workspaceId').value;
+        const CLICK_ID = () => document.getElementById('clickId').value;
+
+        // Charger les liens au chargement de la page
+        window.addEventListener('DOMContentLoaded', () => {
+            loadLinks();
+            // Détecter le clickId depuis les cookies
+            const clickId = getCookie('clickId');
+            if (clickId) {
+                document.getElementById('clickId').value = clickId;
+            }
+        });
+
+        function getCookie(name) {
+            const value = `; ${document.cookie}`;
+            const parts = value.split(`; ${name}=`);
+            if (parts.length === 2) return parts.pop().split(';').shift();
+            return null;
+        }
+
+        function showAlert(containerId, message, type = 'info') {
+            const container = document.getElementById(containerId);
+            container.innerHTML = `<div class="alert alert-${type}">${message}</div>`;
+            setTimeout(() => {
+                container.innerHTML = '';
+            }, 5000);
+        }
+
+        async function createLink(event) {
+            event.preventDefault();
+            const targetUrl = document.getElementById('targetUrl').value;
+            const slug = document.getElementById('slug').value;
+            const title = document.getElementById('linkTitle').value;
+            const description = document.getElementById('linkDescription').value;
+
+            const payload = {
+                workspaceId: WORKSPACE_ID(),
+                targetUrl,
+                trackConversion: true,
+            };
+
+            if (slug) payload.slug = slug;
+            if (title) payload.title = title;
+            if (description) payload.description = description;
+
+            try {
+                const response = await fetch(`${API_URL()}/links`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload),
+                });
+
+                if (!response.ok) {
+                    const error = await response.text();
+                    throw new Error(`HTTP ${response.status}: ${error}`);
+                }
+
+                const link = await response.json();
+                showAlert('createLinkAlert', `✅ Lien créé avec succès ! Slug: <code>${link.slug}</code>`, 'success');
+                
+                // Réinitialiser le formulaire
+                document.getElementById('createLinkForm').reset();
+                
+                // Recharger la liste
+                loadLinks();
+            } catch (error) {
+                showAlert('createLinkAlert', `❌ Erreur: ${error.message}`, 'error');
+            }
+        }
+
+        async function loadLinks() {
+            const container = document.getElementById('linksList');
+            container.innerHTML = '<div class="loading">Chargement des liens...</div>';
+
+            try {
+                const response = await fetch(`${API_URL()}/links?workspaceId=${WORKSPACE_ID()}`);
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}`);
+                }
+
+                const data = await response.json();
+                const links = data.items || [];
+
+                if (links.length === 0) {
+                    container.innerHTML = '<div class="empty-state">Aucun lien créé pour le moment</div>';
+                    return;
+                }
+
+                container.innerHTML = links.map(link => `
+                    <div class="link-card">
+                        <h3>${link.title || 'Sans titre'}</h3>
+                        <div class="link-url">
+                            <a href="${REDIRECT_URL()}/${link.slug}" target="_blank">
+                                ${REDIRECT_URL()}/${link.slug}
+                            </a>
+                        </div>
+                        <div><strong>Destination:</strong> ${link.targetUrl}</div>
+                        ${link.description ? `<div style="margin-top: 10px; color: #666;">${link.description}</div>` : ''}
+                        <div class="stats" id="stats-${link.id}">
+                            <div class="stat-item">
+                                <div class="label">Clics</div>
+                                <div class="value">-</div>
+                            </div>
+                            <div class="stat-item">
+                                <div class="label">Leads</div>
+                                <div class="value">-</div>
+                            </div>
+                            <div class="stat-item">
+                                <div class="label">Ventes</div>
+                                <div class="value">-</div>
+                            </div>
+                            <div class="stat-item">
+                                <div class="label">Revenus</div>
+                                <div class="value">-</div>
+                            </div>
+                        </div>
+                        <div class="actions">
+                            <button class="btn btn-secondary" onclick="testLink('${link.slug}')">🔗 Tester</button>
+                            <button class="btn" onclick="loadLinkStats('${link.id}')">📊 Stats</button>
+                        </div>
+                    </div>
+                `).join('');
+
+                // Charger les stats pour tous les liens
+                links.forEach(link => loadLinkStats(link.id));
+            } catch (error) {
+                container.innerHTML = `<div class="alert alert-error">❌ Erreur: ${error.message}</div>`;
+            }
+        }
+
+        async function loadLinkStats(linkId) {
+            const statsContainer = document.getElementById(`stats-${linkId}`);
+            if (!statsContainer) return;
+
+            try {
+                const response = await fetch(`${API_URL()}/links/${linkId}/stats`);
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}`);
+                }
+
+                const stats = await response.json();
+                
+                const clicksEl = statsContainer.querySelector('.stat-item:nth-child(1) .value');
+                const leadsEl = statsContainer.querySelector('.stat-item:nth-child(2) .value');
+                const salesEl = statsContainer.querySelector('.stat-item:nth-child(3) .value');
+                const revenueEl = statsContainer.querySelector('.stat-item:nth-child(4) .value');
+
+                if (clicksEl) clicksEl.textContent = stats.clicks || 0;
+                if (leadsEl) leadsEl.textContent = stats.leads || 0;
+                if (salesEl) salesEl.textContent = stats.sales || 0;
+                if (revenueEl) revenueEl.textContent = stats.totalRevenue ? `$${stats.totalRevenue.toFixed(2)}` : '$0.00';
+            } catch (error) {
+                console.error('Erreur chargement stats:', error);
+            }
+        }
+
+        function testLink(slug) {
+            window.open(`${REDIRECT_URL()}/${slug}`, '_blank');
+            showAlert('testAlert', `🔗 Redirection vers ${REDIRECT_URL()}/${slug}`, 'info');
+            
+            // Attendre un peu puis recharger les stats
+            setTimeout(() => {
+                loadLinks();
+            }, 2000);
+        }
+
+        async function testLead() {
+            const clickId = CLICK_ID();
+            if (!clickId) {
+                showAlert('testAlert', '⚠️ Aucun Click ID détecté. Cliquez d\'abord sur "Tester" un lien.', 'error');
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_URL()}/track/lead`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        workspaceId: WORKSPACE_ID(),
+                        clickId,
+                        customerExternalId: `test-customer-${Date.now()}`,
+                        eventName: 'signup',
+                        idempotencyKey: `lead-${Date.now()}`,
+                    }),
+                });
+
+                if (!response.ok) {
+                    const error = await response.text();
+                    throw new Error(`HTTP ${response.status}: ${error}`);
+                }
+
+                const result = await response.json();
+                showAlert('testAlert', `✅ Lead créé avec succès ! ID: ${result.id}`, 'success');
+                loadLinks();
+            } catch (error) {
+                showAlert('testAlert', `❌ Erreur: ${error.message}`, 'error');
+            }
+        }
+
+        async function testSale() {
+            const clickId = CLICK_ID();
+            if (!clickId) {
+                showAlert('testAlert', '⚠️ Aucun Click ID détecté. Cliquez d\'abord sur "Tester" un lien.', 'error');
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_URL()}/track/sale`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        workspaceId: WORKSPACE_ID(),
+                        clickId,
+                        customerExternalId: `test-customer-${Date.now()}`,
+                        amount: 99.99,
+                        currency: 'USD',
+                        invoiceId: `invoice-${Date.now()}`,
+                        idempotencyKey: `sale-${Date.now()}`,
+                    }),
+                });
+
+                if (!response.ok) {
+                    const error = await response.text();
+                    throw new Error(`HTTP ${response.status}: ${error}`);
+                }
+
+                const result = await response.json();
+                showAlert('testAlert', `✅ Vente créée avec succès ! ID: ${result.id}`, 'success');
+                loadLinks();
+            } catch (error) {
+                showAlert('testAlert', `❌ Erreur: ${error.message}`, 'error');
+            }
+        }
+
+        function refreshStats() {
+            loadLinks();
+            showAlert('testAlert', '🔄 Statistiques actualisées', 'info');
+        }
+    </script>
+</body>
+</html>

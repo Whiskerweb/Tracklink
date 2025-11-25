@@ -1,0 +1,110 @@
+{
+  "timestamp": "2025-11-24T22:09:53.321Z",
+  "summary": {
+    "total": 8,
+    "passed": 0,
+    "failed": 8,
+    "percentage": 0,
+    "anomalies": 8
+  },
+  "results": [
+    {
+      "test": "GET /domains crée domaine par défaut",
+      "category": "Domaines",
+      "passed": false,
+      "error": "TypeError: fetch failed"
+    },
+    {
+      "test": "POST /links crée lien",
+      "category": "Links",
+      "passed": false,
+      "error": "TypeError: fetch failed"
+    },
+    {
+      "test": "GET /:slug redirige",
+      "category": "Redirect",
+      "passed": false,
+      "error": "TypeError: fetch failed"
+    },
+    {
+      "test": "POST /track/lead",
+      "category": "Leads",
+      "passed": false,
+      "error": "TypeError: fetch failed"
+    },
+    {
+      "test": "POST /track/sale",
+      "category": "Sales",
+      "passed": false,
+      "error": "TypeError: fetch failed"
+    },
+    {
+      "test": "Attribution last touch",
+      "category": "Attribution",
+      "passed": false,
+      "error": "TypeError: fetch failed"
+    },
+    {
+      "test": "Attribution fallback",
+      "category": "Attribution",
+      "passed": false,
+      "error": "TypeError: fetch failed"
+    },
+    {
+      "test": "POST /partners crée partenaire",
+      "category": "Partners",
+      "passed": false,
+      "error": "TypeError: fetch failed"
+    }
+  ],
+  "anomalies": [
+    {
+      "test": "GET /domains crée domaine par défaut",
+      "category": "Domaines",
+      "passed": false,
+      "error": "TypeError: fetch failed"
+    },
+    {
+      "test": "POST /links crée lien",
+      "category": "Links",
+      "passed": false,
+      "error": "TypeError: fetch failed"
+    },
+    {
+      "test": "GET /:slug redirige",
+      "category": "Redirect",
+      "passed": false,
+      "error": "TypeError: fetch failed"
+    },
+    {
+      "test": "POST /track/lead",
+      "category": "Leads",
+      "passed": false,
+      "error": "TypeError: fetch failed"
+    },
+    {
+      "test": "POST /track/sale",
+      "category": "Sales",
+      "passed": false,
+      "error": "TypeError: fetch failed"
+    },
+    {
+      "test": "Attribution last touch",
+      "category": "Attribution",
+      "passed": false,
+      "error": "TypeError: fetch failed"
+    },
+    {
+      "test": "Attribution fallback",
+      "category": "Attribution",
+      "passed": false,
+      "error": "TypeError: fetch failed"
+    },
+    {
+      "test": "POST /partners crée partenaire",
+      "category": "Partners",
+      "passed": false,
+      "error": "TypeError: fetch failed"
+    }
+  ]
+}

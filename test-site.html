@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Site de Test - Tracking</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      max-width: 800px;
+      margin: 50px auto;
+      padding: 20px;
+    }
+    button {
+      background: #007bff;
+      color: white;
+      border: none;
+      padding: 12px 24px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 16px;
+      margin: 10px 5px;
+    }
+    button:hover {
+      background: #0056b3;
+    }
+    .info {
+      background: #f0f0f0;
+      padding: 15px;
+      border-radius: 4px;
+      margin: 20px 0;
+    }
+    .success {
+      background: #d4edda;
+      color: #155724;
+      padding: 10px;
+      border-radius: 4px;
+      margin: 10px 0;
+    }
+    .error {
+      background: #f8d7da;
+      color: #721c24;
+      padding: 10px;
+      border-radius: 4px;
+      margin: 10px 0;
+    }
+  </style>
+</head>
+<body>
+  <h1>🧪 Site de Test - Tracking API</h1>
+  
+  <div class="info">
+    <strong>Workspace ID:</strong> <span id="workspaceId">cmidm26nm0000za0elfln3o8m</span><br>
+    <strong>Click ID:</strong> <span id="clickId">-</span><br>
+    <strong>Status:</strong> <span id="status">Non initialisé</span>
+  </div>
+
+  <h2>Actions de Test</h2>
+  
+  <button onclick="initTracking()">1. Initialiser Tracking</button>
+  <button onclick="trackLead()">2. Tracker Lead (Inscription)</button>
+  <button onclick="trackSale()">3. Tracker Sale (Commande)</button>
+  <button onclick="checkCookie()">4. Vérifier Cookie</button>
+
+  <div id="results"></div>
+
+  <script>
+    const API_BASE_URL = 'http://localhost:4000';
+    const WORKSPACE_ID = 'cmidm26nm0000za0elfln3o8m';
+    let clickId = null;
+
+    function showResult(message, isError = false) {
+      const resultsDiv = document.getElementById('results');
+      const div = document.createElement('div');
+      div.className = isError ? 'error' : 'success';
+      div.textContent = message;
+      resultsDiv.appendChild(div);
+      resultsDiv.scrollTop = resultsDiv.scrollHeight;
+      setTimeout(() => div.remove(), 5000);
+    }
+
+    function getClickIdFromCookie() {
+      const match = document.cookie.match(/(?:^| )cursor_click_id=([^;]+)/);
+      return match ? match[1] : null;
+    }
+
+    async function initTracking() {
+      try {
+        document.getElementById('status').textContent = 'Initialisation...';
+        clickId = getClickIdFromCookie();
+        if (!clickId) {
+          clickId = crypto.randomUUID();
+          document.cookie = `cursor_click_id=${clickId}; path=/; max-age=${60 * 60 * 24 * 90}; samesite=lax`;
+        }
+        document.getElementById('clickId').textContent = clickId;
+        document.getElementById('status').textContent = 'Initialisé ✅';
+        showResult(`✅ Tracking initialisé ! Click ID: ${clickId}`);
+      } catch (error) {
+        showResult(`❌ Erreur: ${error.message}`, true);
+      }
+    }
+
+    async function trackLead() {
+      try {
+        if (!clickId) {
+          showResult('❌ Veuillez d\'abord initialiser le tracking', true);
+          return;
+        }
+        const customerId = `customer-${Date.now()}`;
+        const payload = {
+          workspaceId: WORKSPACE_ID,
+          customerExternalId: customerId,
+          eventName: 'signup',
+          clickId: clickId,
+          email: 'test@example.com',
+          name: 'Test User',
+          pageUrl: window.location.href,
+          referrer: document.referrer,
+          utmSource: new URLSearchParams(window.location.search).get('utm_source') || undefined,
+          utmMedium: new URLSearchParams(window.location.search).get('utm_medium') || undefined,
+          utmCampaign: new URLSearchParams(window.location.search).get('utm_campaign') || undefined,
+          browserLanguage: navigator.language,
+          screen: `${window.screen.width}x${window.screen.height}`,
+        };
+        const response = await fetch(`${API_BASE_URL}/track/lead`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload),
+        });
+        if (response.ok) {
+          const data = await response.json();
+          showResult(`✅ Lead tracké ! ID: ${data.id}, Customer: ${customerId}`);
+        } else {
+          const error = await response.json();
+          showResult(`❌ Erreur: ${JSON.stringify(error)}`, true);
+        }
+      } catch (error) {
+        showResult(`❌ Erreur: ${error.message}`, true);
+      }
+    }
+
+    async function trackSale() {
+      try {
+        if (!clickId) {
+          showResult('❌ Veuillez d\'abord initialiser le tracking', true);
+          return;
+        }
+        const customerId = `customer-${Date.now()}`;
+        const invoiceId = `invoice-${Date.now()}`;
+        const payload = {
+          workspaceId: WORKSPACE_ID,
+          customerExternalId: customerId,
+          amount: 99.99,
+          currency: 'USD',
+          invoiceId: invoiceId,
+          clickId: clickId,
+          pageUrl: window.location.href,
+          referrer: document.referrer,
+          utmSource: new URLSearchParams(window.location.search).get('utm_source') || undefined,
+          utmMedium: new URLSearchParams(window.location.search).get('utm_medium') || undefined,
+          utmCampaign: new URLSearchParams(window.location.search).get('utm_campaign') || undefined,
+          browserLanguage: navigator.language,
+          screen: `${window.screen.width}x${window.screen.height}`,
+        };
+        const response = await fetch(`${API_BASE_URL}/track/sale`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload),
+        });
+        if (response.ok) {
+          const data = await response.json();
+          showResult(`✅ Sale trackée ! ID: ${data.id}, Montant: 99.99 USD, Invoice: ${invoiceId}`);
+        } else {
+          const error = await response.json();
+          showResult(`❌ Erreur: ${JSON.stringify(error)}`, true);
+        }
+      } catch (error) {
+        showResult(`❌ Erreur: ${error.message}`, true);
+      }
+    }
+
+    function checkCookie() {
+      const cookie = getClickIdFromCookie();
+      if (cookie) {
+        showResult(`✅ Cookie trouvé: ${cookie}`);
+        clickId = cookie;
+        document.getElementById('clickId').textContent = clickId;
+      } else {
+        showResult('⚠️ Aucun cookie trouvé. Cliquez sur "Initialiser Tracking"', true);
+      }
+    }
+
+    window.addEventListener('load', () => {
+      const cookie = getClickIdFromCookie();
+      if (cookie) {
+        clickId = cookie;
+        document.getElementById('clickId').textContent = clickId;
+        document.getElementById('status').textContent = 'Initialisé ✅ (depuis cookie)';
+      }
+    });
+  </script>
+</body>
+</html>

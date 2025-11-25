@@ -1,0 +1,123 @@
+{
+  "timestamp": "2025-11-24T21:43:39.169Z",
+  "summary": {
+    "total": 12,
+    "passed": 12,
+    "failed": 0,
+    "percentage": 100,
+    "failures": 0
+  },
+  "results": [
+    {
+      "feature": "Création domaine",
+      "category": "Domaines",
+      "passed": true,
+      "details": {
+        "domainId": "cmidobltk0002xxsqkp26j7jg"
+      }
+    },
+    {
+      "feature": "Domaine par défaut (création auto)",
+      "category": "Domaines",
+      "passed": true,
+      "details": {
+        "defaultDomain": "traaaction.com",
+        "found": true,
+        "domainId": "cmidobm9p0005xxsqzliku6r2"
+      }
+    },
+    {
+      "feature": "Création lien (logique API)",
+      "category": "Links",
+      "passed": true,
+      "details": {
+        "linkId": "cmidobmti000axxsq7wxabrvs",
+        "domainId": "cmidobmpz0008xxsqam23ngxh",
+        "domainHost": "traaaction.com"
+      }
+    },
+    {
+      "feature": "Lien créé et accessible",
+      "category": "Links",
+      "passed": true,
+      "details": {
+        "linkId": "cmidobno5000fxxsqdebo6i2e"
+      }
+    },
+    {
+      "feature": "Création ClickEvent",
+      "category": "Clicks",
+      "passed": true,
+      "details": {
+        "clickId": "cmidoboec000mxxsqfjx40zej"
+      }
+    },
+    {
+      "feature": "Track lead (logique complète)",
+      "category": "Leads",
+      "passed": true,
+      "details": {
+        "leadId": "cmidobp59000pxxsqxoi2n857",
+        "attributionReason": "none"
+      }
+    },
+    {
+      "feature": "Customer upsert sur lead",
+      "category": "Leads",
+      "passed": true,
+      "details": {
+        "customerId": "cmidobqua000wxxsqit6ixdbm",
+        "leadCount": 1
+      }
+    },
+    {
+      "feature": "Track sale (logique complète)",
+      "category": "Sales",
+      "passed": true,
+      "details": {
+        "saleId": "cmidobrgz000zxxsqm6swvj2u",
+        "attributionReason": "none"
+      }
+    },
+    {
+      "feature": "Customer upsert sur sale",
+      "category": "Sales",
+      "passed": true,
+      "details": {
+        "customerId": "cmidobsye0016xxsqwbb4uyhi",
+        "saleCount": 1,
+        "totalRevenue": 15000
+      }
+    },
+    {
+      "feature": "Attribution last touch",
+      "category": "Attribution",
+      "passed": true,
+      "details": {
+        "logId": "cmidobty2001jxxsq3ys1qimy",
+        "model": "last",
+        "chosenClickId": "click-2",
+        "expectedClickId": "click-2"
+      }
+    },
+    {
+      "feature": "Attribution fallback default partner",
+      "category": "Attribution",
+      "passed": true,
+      "details": {
+        "logId": "cmidobvm3001sxxsqunvyy2ck",
+        "reason": "fallback_default_partner",
+        "partnerId": "cmidobv4d001oxxsqaktqgjhr"
+      }
+    },
+    {
+      "feature": "Création partenaire",
+      "category": "Partners",
+      "passed": true,
+      "details": {
+        "partnerId": "cmidobwp2001xxxsqbtyr81ye"
+      }
+    }
+  ],
+  "failures": []
+}
