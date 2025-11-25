@@ -403,10 +403,16 @@
             } catch (error) {
                 let errorMessage = error.message;
                 if (error.message === 'Failed to fetch' || error.message.includes('fetch')) {
-                    errorMessage = `Impossible de contacter l'API. Vérifiez que l'URL est correcte (${API_URL()}) et que l'API est accessible.`;
+                    const apiUrl = API_URL();
+                    errorMessage = `❌ L'API n'est pas accessible sur ${apiUrl}<br><br>` +
+                        `<strong>Solutions possibles :</strong><br>` +
+                        `1. Vérifiez que l'API est déployée et accessible<br>` +
+                        `2. Vérifiez la configuration DNS pour api.traaaction.com<br>` +
+                        `3. Vérifiez que le serveur API est démarré<br>` +
+                        `4. En développement local, utilisez http://localhost:4000`;
                 }
                 console.error('Erreur création lien:', error);
-                showAlert('createLinkAlert', `❌ Erreur: ${errorMessage}`, 'error');
+                showAlert('createLinkAlert', errorMessage, 'error');
             } finally {
                 // Réactiver le bouton
                 createBtn.disabled = false;
